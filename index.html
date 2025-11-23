@@ -2,31 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Game - Level 1</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, maximum-scale=1">
+    <title>Maze Game Level 1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2 class="title">Maze Game – Level 1</h2>
+    <h1 class="title">Level 1 — Warga Crystal</h1>
+    <div id="timer">Time: 60s</div>
+    <canvas id="mazeCanvas"></canvas>
 
-<div id="gameContainer">
-    <canvas id="mazeCanvas" width="300" height="300"></canvas>
-</div>
-
-<div class="controls">
-    <button class="btn" id="up">▲</button>
-    <div>
-        <button class="btn" id="left">◀</button>
-        <button class="btn" id="right">▶</button>
+    <!-- Control Buttons -->
+    <div id="controls">
+        <button class="control-btn" data-dir="up">▲</button>
+        <div>
+            <button class="control-btn" data-dir="left">◀</button>
+            <button class="control-btn" data-dir="right">▶</button>
+        </div>
+        <button class="control-btn" data-dir="down">▼</button>
     </div>
-    <button class="btn" id="down">▼</button>
-</div>
 
-<div id="message" class="hidden">
-    🎉 Congratulations! <br> LV1 Warga Crystal Complete 🎉
-</div>
+    <!-- Popup Game Over -->
+    <div id="popupGameOver" class="popup hidden">
+        <div class="popup-box">
+            <h2>Game Over!</h2>
+            <p>Waktu habis.</p>
+            <p>Restart game?</p>
+            <button id="restartYes">YES</button>
+            <button id="restartNo">NO</button>
+        </div>
+    </div>
 
-<script src="script.js"></script>
+    <!-- Popup Win -->
+    <div id="popupWin" class="popup hidden">
+        <div class="popup-box">
+            <h2>Congratulation!</h2>
+            <p>LV1 Warga Crystal COMPLETE</p>
+            <button id="winRestart">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>

@@ -1,76 +1,142 @@
 const canvas = document.getElementById("mazeCanvas");
 const ctx = canvas.getContext("2d");
 
-const tile = 30;
+canvas.width = 400;
+canvas.height = 400;
 
-const maze = [
-    [1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,1,0,0,0,0,1],
-    [1,0,1,0,1,0,1,1,0,1],
-    [1,0,1,0,0,0,0,1,0,1],
-    [1,0,1,1,1,1,0,1,0,1],
-    [1,0,0,0,0,1,0,1,0,1],
-    [1,1,1,1,0,1,0,1,0,1],
-    [1,0,0,1,0,0,0,0,0,1],
-    [1,0,1,0,0,1,1,1,0,1],
-    [1,1,1,1,1,1,1,1,1,1],
-];
+const cellSize = 20;
+const rows = canvas.height / cellSize;
+const cols = canvas.width / cellSize;
 
-let player = { x: 1, y: 1 };
+/* Generate hard maze (95% difficulty) */
+function generateMaze() {
+    let maze = [];
+    for (let r = 0; r < rows; r++) {
+        maze[r] = [];
+        for (let c = 0; c < cols; c++) {
+            maze[r][c] = Math.random() > 0.95 ? 0 : 1; 
+        }
+    }
+    maze[1][1] = 0;  
+    maze[rows - 2][cols - 2] = 0; 
+    return maze;
+}
 
-const goal = { x: 8, y: 8 };
+let maze = generateMaze();
 
+let player = { r: 1, c: 1 };
+let goal = { r: rows - 2, c: cols - 2 };
+
+/* Draw Maze */
 function drawMaze() {
-    for (let y = 0; y < maze.length; y++) {
-        for (let x = 0; x < maze[y].length; x++) {
-            ctx.fillStyle = maze[y][x] === 1 ? "#222" : "#ddd";
-            ctx.fillRect(x * tile, y * tile, tile, tile);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (maze[r][c] === 1) {
+                ctx.fillStyle = "#000";
+            } else {
+                ctx.fillStyle = "#fff";
+            }
+            ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
         }
     }
 
-    ctx.fillStyle = "gold";
-    ctx.fillRect(goal.x * tile, goal.y * tile, tile, tile);
-
     ctx.fillStyle = "red";
-    ctx.beginPath();
-    ctx.arc(player.x * tile + tile/2, player.y * tile + tile/2, 12, 0, Math.PI*2);
-    ctx.fill();
+    ctx.fillRect(player.c * cellSize, player.r * cellSize, cellSize, cellSize);
+
+    ctx.fillStyle = "green";
+    ctx.fillRect(goal.c * cellSize, goal.r * cellSize, cellSize, cellSize);
 }
 
-function checkWin() {
-    if (player.x === goal.x && player.y === goal.y) {
-        document.getElementById("message").classList.remove("hidden");
+function movePlayer(dir) {
+    let nr = player.r;
+    let nc = player.c;
+
+    if (dir === "up") nr--;
+    if (dir === "down") nr++;
+    if (dir === "left") nc--;
+    if (dir === "right") nc++;
+
+    if (maze[nr][nc] === 0) {
+        player.r = nr;
+        player.c = nc;
     }
-}
 
-function move(dx, dy) {
-    const newX = player.x + dx;
-    const newY = player.y + dy;
-
-    if (maze[newY][newX] === 0) {
-        player.x = newX;
-        player.y = newY;
+    if (player.r === goal.r && player.c === goal.c) {
+        clearInterval(timerInterval);
+        document.getElementById("popupWin").classList.remove("hidden");
     }
 
-    redraw();
-    checkWin();
-}
-
-function redraw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
     drawMaze();
 }
 
-document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowUp") move(0, -1);
-    if (e.key === "ArrowDown") move(0, 1);
-    if (e.key === "ArrowLeft") move(-1, 0);
-    if (e.key === "ArrowRight") move(1, 0);
+/* Button Controls */
+document.querySelectorAll(".control-btn").forEach(btn => {
+    btn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        movePlayer(e.target.dataset.dir);
+    });
 });
 
-document.getElementById("up").onclick = () => move(0, -1);
-document.getElementById("down").onclick = () => move(0, 1);
-document.getElementById("left").onclick = () => move(-1, 0);
-document.getElementById("right").onclick = () => move(1, 0);
+/* Swipe Gesture */
+let startX = 0;
+let startY = 0;
 
-redraw();
+canvas.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+});
+
+canvas.addEventListener("touchend", (e) => {
+    let dx = e.changedTouches[0].clientX - startX;
+    let dy = e.changedTouches[0].clientY - startY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 20) movePlayer("right");
+        if (dx < -20) movePlayer("left");
+    } else {
+        if (dy > 20) movePlayer("down");
+        if (dy < -20) movePlayer("up");
+    }
+});
+
+/* TIMER */
+let timeLeft = 60;
+let timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById("timer").innerText = "Time: " + timeLeft + "s";
+
+    if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById("popupGameOver").classList.remove("hidden");
+    }
+}, 1000);
+
+/* Restart Game */
+function restartGame() {
+    player = { r: 1, c: 1 };
+    maze = generateMaze();
+    timeLeft = 60;
+    document.getElementById("popupGameOver").classList.add("hidden");
+    document.getElementById("popupWin").classList.add("hidden");
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = "Time: " + timeLeft + "s";
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById("popupGameOver").classList.remove("hidden");
+        }
+    }, 1000);
+
+    drawMaze();
+}
+
+document.getElementById("restartYes").onclick = restartGame;
+document.getElementById("winRestart").onclick = restartGame;
+
+document.getElementById("restartNo").onclick = () => {
+    alert("Terima kasih sudah mencoba!");
+};
+
+drawMaze();
