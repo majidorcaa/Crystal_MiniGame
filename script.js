@@ -140,3 +140,4 @@ document.getElementById("restartNo").onclick = () => {
 };
 
 drawMaze();
+
